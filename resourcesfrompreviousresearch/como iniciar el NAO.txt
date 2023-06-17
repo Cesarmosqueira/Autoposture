@@ -1,0 +1,5 @@
+abrir choregraphe
+
+correr RunSim.bat
+
+WebCamToNaoService.py
