@@ -8,7 +8,7 @@ video_dir = 'dataset_videos/'  # Directory where your video files are stored
 frame_duration = 1  # Duration of each frame in seconds
 
 dataset['Label'] = None
-for index, row in dataset.iloc.iterrows():
+for index, row in dataset.iterrows():
     video = row['video']
     frame = row['frame']
 
