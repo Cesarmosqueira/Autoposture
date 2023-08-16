@@ -176,6 +176,7 @@ cython_debug/
 *.TIFF
 *.HEIC
 *.mp4
+*.zip
 *.mov
 *.MOV
 *.avi
