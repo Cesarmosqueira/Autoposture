@@ -2,9 +2,7 @@
 Video-based Musculoskeletal Risk Assessment: Predictive Software for Evaluating Musculoskeletal Disorders
 
 
-| Media Pipe estimation | 3D Plot animated |
-|---------|---------|
-| ![mptest](media/testing.gif) | ![3dplot](media/animation.gif) |
+check this out BRO https://github.com/retkowsky/Human_pose_estimation_with_YoloV7/blob/main/Human_pose_estimation_YoloV7.ipynb
 
 
 ## To execute data processing
