@@ -1,9 +1,18 @@
 import cv2
 import pandas as pd
+import numpy as np
+dataset = pd.read_csv('assets/extracted_landmarks_test.csv')
 
-dataset = pd.read_csv('../assets/extracted_landmarks.csv')
+def is_float(num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
+    
+dataset['landmarks'] = dataset['landmarks'].apply(lambda arr: np.array([float(n) for n in arr.split() if is_float(n)]))
 
-video_dir = '../assets/dataset_videos/'  # Directory where your video files are stored
+video_dir = 'assets/dataset_videos/batch_test'  # Directory where your video files are stored
 
 dataset['Label'] = None
 for index, row in dataset.iterrows():
@@ -44,5 +53,5 @@ for index, row in dataset.iterrows():
     # Close the video display window
     cv2.destroyAllWindows()
 
-dataset.to_csv('../assets/labeled_dataset.csv', index=False)
+dataset.to_csv('assets/labeled_dataset_test.csv', index=False)
 print(dataset.head())

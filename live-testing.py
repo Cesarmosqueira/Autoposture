@@ -8,6 +8,7 @@ sys.path.append(yolov7_path)
 import cv2
 import time
 import torch
+import requests
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,14 +18,14 @@ from utils.torch_utils import select_device
 from models.experimental import attempt_load
 from utils.general import non_max_suppression_kpt,strip_optimizer,xyxy2xywh
 from utils.plots import output_to_keypoint, plot_skeleton_kpts,colors,plot_one_box_kpt
-from src_models.autoposture_model import initialize_model# , preprocess_sequences
+# from src_models.autoposture_model import initialize_model# , preprocess_sequences
 
-ap_model = initialize_model('src_models/lstm_model_v01.h5')
+# ap_model = initialize_model('src_models/lstm_model_v01.h5')
 
 @torch.no_grad()
 def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view_img=False,
         save_conf=False,line_thickness = 3,hide_labels=False, hide_conf=True):
-    global ap_model
+    # global ap_model
 
     frame_count = 0  #count no of frames
     total_fps = 0  #count total fps
@@ -89,15 +90,26 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                                             kpt_label=True)
             
                 output = output_to_keypoint(output_data)
-                # if frame_count % 10 == 0:
-                #     landmarks = output[0, 7:]
-                #     current_sequence += [landmarks]
+                if frame_count % 10 == 0:
+                    landmarks = output[0, 7:].T
+                    landmarks = landmarks[:-1]
+                    current_sequence += [landmarks]
+                    print(current_sequence)
 
-                # if len(current_sequence) == 10:
-                #     current_sequence = np.array(current_sequence)
-                #     preprocessed_sequence = preprocess_sequence(current_sequence)
-                #     print(preprocessed_sequence.shape)
-                #     current_sequence = []
+                if len(current_sequence) == 10:
+                    current_sequence = np.array(current_sequence)
+                    payload = {'array': current_sequence.tolist()}
+                    url = "http://41d8-35-221-152-202.ngrok-free.app/predict"
+                    response = requests.post(url, json=payload)
+
+                    if response.status_code == 200:
+                        response_data = response.json()
+                        response_array = np.array(response_data['response_array'])
+                        print(response_array)
+                    else:
+                        print("Error:", response.text)
+
+                    current_sequence = []
 
 
                 im0 = image[0].permute(1, 2, 0) * 255 # Change format [b, c, h, w] to [h, w, c] for displaying the image.
