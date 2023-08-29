@@ -9,6 +9,11 @@ check this out BRO https://github.com/retkowsky/Human_pose_estimation_with_YoloV
 cd vendor
 git clone https://github.com/RizwanMunawar/yolov7-pose-estimation.git
 ```
+## Run:
+```
+python3 live-testing.py --source 0 --device 0 --view-img
+```
+
 ## To execute data processing
 
 After unzipping the dataset.zip inside `dataset_videos`...
