@@ -4,7 +4,11 @@ Video-based Musculoskeletal Risk Assessment: Predictive Software for Evaluating 
 
 check this out BRO https://github.com/retkowsky/Human_pose_estimation_with_YoloV7/blob/main/Human_pose_estimation_YoloV7.ipynb
 
-
+## Guide:
+```
+cd vendor
+git clone https://github.com/RizwanMunawar/yolov7-pose-estimation.git
+```
 ## To execute data processing
 
 After unzipping the dataset.zip inside `dataset_videos`...
