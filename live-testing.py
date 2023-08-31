@@ -10,6 +10,7 @@ import time
 import torch
 import requests
 import argparse
+import json
 import asyncio
 import websockets
 import numpy as np
@@ -24,16 +25,24 @@ from utils.plots import output_to_keypoint, plot_skeleton_kpts,colors,plot_one_b
 
 # ap_model = initialize_model('src_models/lstm_model_v01.h5')
 
-async def testing_webSockets():
+async def testing_webSockets(payload):
     uri = "ws://localhost:8765"
     async with websockets.connect(uri) as websocket:
+        payload_json = json.dumps(payload)
 
-        name = 'Cesar'
-        await websocket.send(name)
-        print(f'Client sent: {name}')
+        print(np.mean(payload['array']))
 
-        greeting = await websocket.recv()
-        print(f"Cliente received: {greeting}")
+        await websocket.send(payload_json)
+        # print(f'Client sent: {payload_json}')
+
+        prediction_json = await websocket.recv()
+        prediction = json.loads(prediction_json)
+        response_array = prediction['response_array']
+        
+        print(f'Prediction: {response_array}')
+
+
+        return
 
 
 @torch.no_grad()
@@ -111,9 +120,10 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                     # print(current_sequence)
 
                 if len(current_sequence) == 10:
-                   asyncio.run(testing_webSockets()) 
-                    #current_sequence = np.array(current_sequence)
-                    #payload = {'array': current_sequence.tolist()}
+                   current_sequence = np.array(current_sequence)
+                   payload = {'array': current_sequence.tolist()}
+
+                   asyncio.run(testing_webSockets(payload)) 
                     #url = "http://41d8-35-221-152-202.ngrok-free.app/predict"
                     #response = requests.post(url, json=payload)
 
@@ -124,7 +134,7 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                     #else:
                     #    print("Error:", response.text)
 
-                    #current_sequence = []
+                   current_sequence = []
 
 
                 im0 = image[0].permute(1, 2, 0) * 255 # Change format [b, c, h, w] to [h, w, c] for displaying the image.
