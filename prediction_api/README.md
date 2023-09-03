@@ -1,4 +1,4 @@
-## Prediction api server
+## Prediction System API
 
 Build and run the docker image
 (change the port inside the dockerfile if needed)
@@ -13,4 +13,4 @@ curl http://localhost:8080/healthcheck
 ```
 
 Now the `/predict` endpoint is available and you can run the main script \
-[back](https://github.com/Cesarmosqueira/Autoposture/blob/master/README.md)
+[back](https://github.com/Cesarmosqueira/Autoposture/tree/master#readme)
