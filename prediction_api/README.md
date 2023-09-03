@@ -12,4 +12,5 @@ to check if server is running correctly send a GET request to /healthcheck
 curl http://localhost:8080/healthcheck
 ```
 
-Now the /predict endpoint is available
+Now the `/predict` endpoint is available and you can run the main script \
+[back](https://github.com/Cesarmosqueira/Autoposture/blob/master/README.md)
