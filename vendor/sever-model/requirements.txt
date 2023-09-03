@@ -1,6 +1,0 @@
-flask
-flask-ngrok
-pyngrok
-tensorflow
-scikit-learn
-numpy

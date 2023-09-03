@@ -11,7 +11,7 @@ Or copy and paste:
 git clone https://github.com/Cesarmosqueira/Autoposture --recurse-submodules
 cd Autoposture
 wget -P src_models/ https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt
-wget -P src_models/ https://github.com/Cesarmosqueira/Autoposture/releases/download/v1.0.0/autoposture_v1.0.0.h5
+wget -P src_models/ https://github.com/Cesarmosqueira/Autoposture/releases/download/v1.0.0/autoposture-model.h5
 ```
 
 ## Run:

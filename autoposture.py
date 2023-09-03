@@ -24,8 +24,8 @@ import websockets
 import json
 
 
-HOST = '127.0.0.1'
-PORT = '8765'
+HOST = 'localhost'
+PORT = '8080'
 
 async def predict_request(payload):
     """
@@ -49,7 +49,15 @@ async def predict_request(payload):
         return None, 'server-error'
 
 
-
+def predict_http_request(payload):
+    response = requests.post(f"http://{HOST}:{PORT}/predict", json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        print("Response:")
+        print(json.dumps(data, indent=4))
+    else:
+        print("Error:", response.status_code)
+        print(response.text)
 
 @torch.no_grad()
 def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view_img=False,
@@ -116,10 +124,11 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                     current_sequence = np.array([current_sequence])
                     print(current_sequence.shape)
                     payload = {'array': current_sequence.tolist() }
-                    score, status = asyncio.run(predict_request(payload))
-                    if status == 'server-error':
-                        print('Server error or server not launched')
-                    print(score, status)
+                    predict_http_request(payload)
+                    # score, status = asyncio.run(predict_request(payload))
+                    # if status == 'server-error':
+                    #     print('Server error or server not launched')
+                    # print(score, status)
                     current_sequence = []
 
 

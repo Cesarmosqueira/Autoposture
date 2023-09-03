@@ -25,9 +25,6 @@ async def handle_prediction_request(websocket):
         except Exception as e:
             print("Error sending response:", e)
 
-        else:
-            print("WebSocket connection is closed.")
-
 async def main():
     server = await websockets.serve(handle_prediction_request, HOST, PORT)
     await server.wait_closed()
