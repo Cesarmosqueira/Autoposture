@@ -19,6 +19,9 @@ from utils.datasets import letterbox
 from utils.general import non_max_suppression_kpt, strip_optimizer, xyxy2xywh
 from utils.plots import colors, output_to_keypoint, plot_one_box_kpt, plot_skeleton_kpts
 from utils.torch_utils import select_device
+import asyncio
+import websockets
+import json
 
 
 HOST = '127.0.0.1'
@@ -33,16 +36,18 @@ async def predict_request(payload):
         - status: Good or bad posture (depending on threshold:0.7)
     """
     uri = f"ws://{HOST}:{PORT}"
+    try:
+        async with websockets.connect(uri) as ws:
+            payload_json = json.dumps(payload)
+            await ws.send(payload_json)
+            raw_prediction = await ws.recv()
+            prediction = json.loads(raw_prediction)
+            score = prediction['score']
+            status = prediction['status']
+            return score, status
+    except:
+        return None, 'server-error'
 
-    async with websockets.connect(uri) as ws:
-        payload_json = json.dumps(payload)
-
-        await ws.send(payload_json)
-        raw_prediction = await ws.recv()
-        prediction = json.loads(raw_prediction)
-        score = prediction['score']
-        status = prediction['status']
-        return score, status
 
 
 
@@ -112,6 +117,8 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                     print(current_sequence.shape)
                     payload = {'array': current_sequence.tolist() }
                     score, status = asyncio.run(predict_request(payload))
+                    if status == 'server-error':
+                        print('Server error or server not launched')
                     print(score, status)
                     current_sequence = []
 
