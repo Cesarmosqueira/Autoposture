@@ -1,0 +1,6 @@
+[submodule "yolov7-pose-estimation"]
+	path = yolov7-pose-estimation
+	url = https://github.com/RizwanMunawar/yolov7-pose-estimation.git
+[submodule "vendor/yolov7"]
+	path = vendor/yolov7
+	url = https://github.com/RizwanMunawar/yolov7-pose-estimation.git
