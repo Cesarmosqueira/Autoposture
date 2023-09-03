@@ -21,11 +21,30 @@ from utils.plots import colors, output_to_keypoint, plot_one_box_kpt, plot_skele
 from utils.torch_utils import select_device
 
 
+HOST = '127.0.0.1'
+PORT = '8765'
+
+async def predict_request(payload):
+    """
+    Args:
+        - payload: {'array': (1, 10, 50) shape (10 frames)}
+    Returns:
+        - score: Value between 0 and 1
+        - status: Good or bad posture (depending on threshold:0.7)
+    """
+    uri = f"ws://{HOST}:{PORT}"
+
+    async with websockets.connect(uri) as ws:
+        payload_json = json.dumps(payload)
+
+        await ws.send(payload_json)
+        raw_prediction = await ws.recv()
+        prediction = json.loads(raw_prediction)
+        score = prediction['score']
+        status = prediction['status']
+        return score, status
 
 
-# from src_models.autoposture_model import initialize_model# , preprocess_sequences
-
-# ap_model = initialize_model('src_models/lstm_model_v01.h5')
 
 @torch.no_grad()
 def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view_img=False,
@@ -38,8 +57,6 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
     fps_list = []    #list to store fps
     
     device = select_device(opt.device) #select device
-    half = device.type != 'cpu'
-
     model = attempt_load(poseweights, map_location=device)  #Load model
     _ = model.eval()
     names = model.module.names if hasattr(model, 'module') else model.names  # get class names
@@ -55,34 +72,24 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
 
     else:
         frame_width = int(cap.get(3))  #get video frame width
-        frame_height = int(cap.get(4)) #get video frame height
-
-        
         vid_write_image = letterbox(cap.read()[1], (frame_width), stride=64, auto=True)[0] #init videowriter
         resize_height, resize_width = vid_write_image.shape[:2]
-        out_video_name = f"{source.split('/')[-1].split('.')[0]}"
         out = cv2.VideoWriter(f"{source}_keypoint.mp4",
                             cv2.VideoWriter_fourcc(*'mp4v'), 30,
                             (resize_width, resize_height))
 
         current_sequence = []
-        while(cap.isOpened): #loop until cap opened or video not complete
-        
-            # print("Frame {} Processing".format(frame_count+1))
-
-            ret, frame = cap.read()  #get frame and success from video capture
-            
-            if ret: #if success is true, means frame exist
-                orig_image = frame #store frame
-                image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) #convert frame to RGB
+        while(cap.isOpened):
+            ret, frame = cap.read() 
+            if ret: 
+                orig_image = frame 
+                image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
                 image = letterbox(image, (frame_width), stride=64, auto=True)[0]
-                image_ = image.copy()
                 image = transforms.ToTensor()(image)
                 image = torch.tensor(np.array([image.numpy()]))
-            
-                image = image.to(device)  #convert image data to device
-                image = image.float() #convert image to float precision (cpu)
-                start_time = time.time() #start time for fps calculation
+                image = image.to(device)
+                image = image.float()
+                start_time = time.time()
             
                 with torch.no_grad():  #get predictions
                     output_data, _ = model(image)
@@ -95,26 +102,18 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                                             kpt_label=True)
             
                 output = output_to_keypoint(output_data)
-                # if frame_count % 10 == 0:
-                #     landmarks = output[0, 7:].T
-                #     landmarks = landmarks[:-1]
-                #     current_sequence += [landmarks]
-                #     print(current_sequence)
 
-                # if len(current_sequence) == 10:
-                #     current_sequence = np.array(current_sequence)
-                #     payload = {'array': current_sequence.tolist()}
-                #     url = "http://41d8-35-221-152-202.ngrok-free.app/predict"
-                #     response = requests.post(url, json=payload)
+                if frame_count % 10 == 0:
+                    landmarks = output[0, 7:].T
+                    current_sequence += [landmarks[:-1]]
 
-                #     if response.status_code == 200:
-                #         response_data = response.json()
-                #         response_array = np.array(response_data['response_array'])
-                #         print(response_array)
-                #     else:
-                #         print("Error:", response.text)
-
-                #     current_sequence = []
+                if len(current_sequence) == 10:
+                    current_sequence = np.array([current_sequence])
+                    print(current_sequence.shape)
+                    payload = {'array': current_sequence.tolist() }
+                    score, status = asyncio.run(predict_request(payload))
+                    print(score, status)
+                    current_sequence = []
 
 
                 im0 = image[0].permute(1, 2, 0) * 255 # Change format [b, c, h, w] to [h, w, c] for displaying the image.
