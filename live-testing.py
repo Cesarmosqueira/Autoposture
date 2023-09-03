@@ -1,26 +1,25 @@
+import argparse
 import os
 import sys
+import time
+
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import requests
 
 
 yolov7_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'vendor/yolov7-pose-estimation')
 sys.path.append(yolov7_path)
 
-import cv2
-import time
+from models.experimental import attempt_load
 import torch
-import requests
-import argparse
-import json
-import asyncio
-import websockets
-import numpy as np
-import matplotlib.pyplot as plt
 from torchvision import transforms
 from utils.datasets import letterbox
+from utils.general import non_max_suppression_kpt, strip_optimizer, xyxy2xywh
+from utils.plots import colors, output_to_keypoint, plot_one_box_kpt, plot_skeleton_kpts
 from utils.torch_utils import select_device
-from models.experimental import attempt_load
-from utils.general import non_max_suppression_kpt,strip_optimizer,xyxy2xywh
-from utils.plots import output_to_keypoint, plot_skeleton_kpts,colors,plot_one_box_kpt
+
 
 HOST = '127.0.0.1'
 PORT = '8765'
@@ -103,6 +102,7 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                                             kpt_label=True)
             
                 output = output_to_keypoint(output_data)
+
                 if frame_count % 10 == 0:
                     landmarks = output[0, 7:].T
                     current_sequence += [landmarks[:-1]]
