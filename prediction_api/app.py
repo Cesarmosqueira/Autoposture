@@ -44,4 +44,3 @@ else:
         logger.error(f'{path.join(model_folder, model_name)} not found')
 
 ps.initialize_model()
-
