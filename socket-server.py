@@ -5,9 +5,8 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 
-model_path = 'pose_estimation_models/lstm_model_ex1.h5'
+model_path = 'src_models/lstm_model_ex1.h5'
 model = load_model(model_path)
-
 print(model.summary())
 
 def preprocess_sequences(sequences):
@@ -36,9 +35,10 @@ async def hello(websocket):
     payload = json.loads(payload_json)
 
     received_array = np.array(payload['array'])
-    processed_array = preprocess_sequences(received_array)
+    single_sequence = preprocess_sequences(received_array)
+    print(single_sequence.shape)
 
-    single_sequence = np.expand_dims(processed_array, axis=0)
+    # single_sequence = np.expand_dims(processed_array, axis=0)
 
     sequence_prediction = model.predict(single_sequence)
     response = {'response_array': sequence_prediction.tolist()}
