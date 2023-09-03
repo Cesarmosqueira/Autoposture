@@ -1,26 +1,14 @@
 # Autoposture
 Video-based Musculoskeletal Risk Assessment: Predictive Software for Evaluating Musculoskeletal Disorders
 
-
-check this out BRO https://github.com/retkowsky/Human_pose_estimation_with_YoloV7/blob/main/Human_pose_estimation_YoloV7.ipynb
-
-## Guide:
+## Important:
+- Clone this repo with --recurse-submodules
+- Download the Pose Estimation pre-trained model from [here](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt) or copy and paste:
 ```
-cd vendor
-git clone https://github.com/RizwanMunawar/yolov7-pose-estimation.git
+wget -P src_models/ https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt
 ```
+
 ## Run:
 ```
-python3 live-testing.py --source 0 --device 0 --view-img
+python autoposture.py --source /dev/video2 --view-img --device cuda
 ```
-
-## To execute data processing
-
-After unzipping the dataset.zip inside `dataset_videos`...
-
-First run the [landmark extraction notebook](landmark_extraction_mechanism/our-estimation.ipynb)
-that will update the `dataset.csv` in the same folder
-
-To label the data run the [Labeling script](labeling_script.py). Press <kbd>G</kbd> or <kbd>B</kbd> to set a sequence as Good or Bad.
-
-That will create a `labeled_dataset.csv` inside the landmark_extraction_mechanism folder

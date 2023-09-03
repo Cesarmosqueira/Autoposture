@@ -9,7 +9,7 @@ import numpy as np
 import requests
 
 
-yolov7_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'vendor/yolov7-pose-estimation')
+yolov7_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'vendor/yolov7')
 sys.path.append(yolov7_path)
 
 from models.experimental import attempt_load
