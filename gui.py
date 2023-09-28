@@ -134,6 +134,7 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                     #     print('Server error or server not launched')
                     # print(score, status)
                     current_sequence = []
+                    
 
 
                 im0 = image[0].permute(1, 2, 0) * 255 # Change format [b, c, h, w] to [h, w, c] for displaying the image.
