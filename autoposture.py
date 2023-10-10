@@ -59,7 +59,7 @@ def predict_http_request(payload):
         print(response.text)
 
 @torch.no_grad()
-def run(source, device, separation, length):
+def run(source, device, separation, length, multiple):
     # global ap_model
     separation = int(separation)
     length = int(length)
@@ -83,8 +83,13 @@ def run(source, device, separation, length):
 
     else:
         frame_width = int(cap.get(3))  #get video frame width
+        # logic for multiple persons
         people = {}
         next_object_id = 0
+        # logic for single persons
+        current_sequence = []
+        current_score = 0
+        current_status = 'good'
 
         empty = False
         while(cap.isOpened):
@@ -109,14 +114,32 @@ def run(source, device, separation, length):
                                             kpt_label=True)
             
                 output = output_to_keypoint(output_data)
-                if len(output) == 0:
-                    if not empty:
-                        print("Wiping data, waiting for objects to appear in frame")
-                    people = {}
-                    next_object_id = 0
-                    empty = True
+                if multiple:
+                    if len(output) == 0:
+                        if not empty:
+                            print("Wiping data, waiting for objects to appear in frame")
+                        people = {}
+                        next_object_id = 0
+                        empty = True
+                    else:
+                        empty = False
                 else:
-                    empty = False
+                    if frame_count % separation == 0:
+                        landmarks = output[0, 7:].T
+                        current_sequence += [landmarks[:-1]]
+
+                    if len(current_sequence) == 10:
+                        current_sequence = np.array([current_sequence])
+                        payload = {'array': current_sequence.tolist() }
+                        response = predict_http_request(payload)
+
+                        current_score = response['score']
+                        current_status = response['status']
+                        # score, status = asyncio.run(predict_request(payload))
+                        # if status == 'server-error':
+                        #     print('Server error or server not launched')
+                        # print(score, status)
+                        current_sequence = []
 
                 
 
@@ -135,34 +158,44 @@ def run(source, device, separation, length):
                     for det_index, (*xyxy, conf, cls) in enumerate(reversed(pose[:,:6])): #loop over poses for drawing on frame
                         c = int(cls)  # integer class
                         kpts = pose[det_index, 6:]
-                        label = 'good'
 
-                        rect = [tensor.cpu().numpy() for tensor in xyxy]
-                        cx, cy = (rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2
-                        matched_object_id = None
 
-                        for object_id, data in people.items():
-                            distance = np.sqrt((cx - data['centroid'][0]) ** 2 + (cy - data['centroid'][1]) ** 2)
-                            if distance < 70:  # Adjust the threshold as needed
-                                matched_object_id = object_id
-                                break
+                        if multiple:
+                            # get the centroid (cx, cy) for the current rectangle
+                            rect = [tensor.cpu().numpy() for tensor in xyxy]
+                            cx, cy = (rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2
+                            matched_object_id = None
 
-                        if matched_object_id is None:
-                            matched_object_id = next_object_id
-                            next_object_id += 1
+                            # iterating through known people
+                            for object_id, data in people.items():
+                                distance = np.sqrt((cx - data['centroid'][0]) ** 2 + (cy - data['centroid'][1]) ** 2)
+                                if distance < 500:  # Adjust the threshold as needed
+                                    matched_object_id = object_id
+                                    break
 
-                        if matched_object_id not in people:
-                            people[matched_object_id] = {'centroid': (cx, cy), 'yoloid': det_index, 'status': 'good', 'score': 0, 'sequence' : []}
+                            if matched_object_id is None:
+                                matched_object_id = next_object_id
+                                next_object_id += 1
+
+                            if matched_object_id not in people:
+                                people[matched_object_id] = {'centroid': (cx, cy), 'yoloid': det_index, 'status': 'good', 'score': 0, 'sequence' : []}
+                            else:
+                                people[matched_object_id]['centroid'] = (cx, cy)
+                                people[matched_object_id]['yoloid'] = det_index
+
+                            obj = people[matched_object_id]
+                            label = f"ID #{obj['yoloid']} Score: {obj['score']:.2f}"
+                            plot_one_box_kpt(xyxy, im0, label=label, color=colors(c, True), 
+                                        line_thickness=3, kpt_label=True, kpts=kpts, steps=3, 
+                                        cmap=people[matched_object_id]['status'])
                         else:
-                            people[matched_object_id]['centroid'] = (cx, cy)
-                            people[matched_object_id]['yoloid'] = det_index
+                            label = f"ID #{0} Score: {current_score:.2f}"
+                            plot_one_box_kpt(xyxy, im0, label=label, color=colors(c, True), 
+                                        line_thickness=3,kpt_label=True, kpts=kpts, steps=3, 
+                                        cmap=current_status)
 
 
-                        plot_one_box_kpt(xyxy, im0, label=label, color=colors(c, True), 
-                                    line_thickness=3, kpt_label=True, kpts=kpts, steps=3, 
-                                    cmap=people[matched_object_id]['status'])
-
-                if frame_count % separation == 0:
+                if frame_count % separation == 0 and multiple:
                     for _, data in people.items():
                         if data['yoloid'] < output.shape[0]:
                             yoloid = data['yoloid']
@@ -177,13 +210,14 @@ def run(source, device, separation, length):
                                 data['status'] = response['status']
                                 data['sequence'] = []
 
-                            print(f"{data['yoloid']} -> {data['status']}", end=' ')
+                            # print(f"{data['yoloid']} -> {data['status']}", end=' ')
                         else:
                             data['sequence'] = []
 
-                    print()
-
-
+                    statuses = [(people[p]['yoloid'], people[p]['status']) for p in people]
+                    # for id, status in statuses:
+                    #     print(f'{id}: {status}', end='\t')
+                    # print()
 
 
                 frame_count += 1
@@ -205,6 +239,7 @@ def parse_opt():
     parser.add_argument('-d', '--device', type=str, default='cpu', help='cpu/0,1,2,3(gpu)')   #device arugments
     parser.add_argument('-sep', '--separation', type=str, default='1', help='Each how many frames the prediction will be executed. Defaults to 1, increase for performance') #separation arugments
     parser.add_argument('-l', '--length', type=str, default='10', help='Defines the length of the sequence. Defaults to 10, decrease for performance') #separation arugments
+    parser.add_argument('-m', '--multiple', default=False, action='store_true', help='Enable multiple-person detection')  # Boolean for multiple person detection
     opt = parser.parse_args()
     return opt
     
