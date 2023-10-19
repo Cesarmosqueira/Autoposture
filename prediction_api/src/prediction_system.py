@@ -48,7 +48,7 @@ def get_prediction(payload : dict):
     score = prediction[0][0]
     response = { 
                 'score': score,
-                'status': 'Good' if score > THRESHOLD else 'Bad'
+                'status': 'good' if score > THRESHOLD else 'bad'
     }
     return response
 
