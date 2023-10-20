@@ -19,7 +19,9 @@ from utils.datasets import letterbox
 from utils.general import non_max_suppression_kpt, strip_optimizer, xyxy2xywh
 from utils.plots import colors, output_to_keypoint, plot_one_box_kpt, plot_skeleton_kpts
 from utils.torch_utils import select_device
+from tts.tttest import generate_audios, play_audio
 import asyncio
+import threading
 import websockets
 import json
 
@@ -90,6 +92,11 @@ def run(source, device, separation, length, multiple):
         current_sequence = []
         current_score = 0
         current_status = 'good'
+        previous_status = "None"
+        longevity = 0 # frames spent in the current status
+
+        # generate_audios("good"); generate_audios("bad")
+        bad_audio_thread = threading.Thread(target=play_audio, args=["bad"])
 
         empty = False
         while(cap.isOpened):
@@ -124,24 +131,43 @@ def run(source, device, separation, length, multiple):
                     else:
                         empty = False
                 else:
-                    if frame_count % separation == 0:
-                        landmarks = output[0, 7:].T
-                        current_sequence += [landmarks[:-1]]
+                    if output.shape[0] > 0:
+                        if frame_count % separation == 0:
+                            landmarks = output[0, 7:].T
+                            current_sequence += [landmarks[:-1]]
 
-                    if len(current_sequence) == 10:
-                        current_sequence = np.array([current_sequence])
-                        payload = {'array': current_sequence.tolist() }
-                        response = predict_http_request(payload)
+                        if len(current_sequence) == 10:
+                            current_sequence = np.array([current_sequence])
+                            payload = {'array': current_sequence.tolist() }
+                            response = predict_http_request(payload)
 
-                        current_score = response['score']
-                        current_status = response['status']
-                        # score, status = asyncio.run(predict_request(payload))
-                        # if status == 'server-error':
-                        #     print('Server error or server not launched')
-                        # print(score, status)
-                        current_sequence = []
+                            current_score = response['score']
 
-                
+                            previous_status = current_status
+                            current_status = response['status']
+                            # score, status = asyncio.run(predict_request(payload))
+                            # if status == 'server-error':
+                            #     print('Server error or server not launched')
+                            # print(score, status)
+                            current_sequence = []
+
+                        if current_status == previous_status:
+                            if not bad_audio_thread.is_alive() and longevity < 30:
+                                longevity += 1
+                            else:
+                                longevity = 0
+                        else:
+                            longevity = 0
+
+                        # if longevity == 30 and current_status == "bad":
+                        #     try:
+                        #         if not bad_audio_thread.is_alive():
+                        #             bad_audio_thread = threading.Thread(target=play_audio("bad"))
+                        #             bad_audio_thread.start()
+                        #     except Exception as e:
+                        #         pass
+
+
 
 
                 im0 = image[0].permute(1, 2, 0) * 255 # Change format [b, c, h, w] to [h, w, c] for displaying the image.
@@ -169,7 +195,8 @@ def run(source, device, separation, length, multiple):
                             # iterating through known people
                             for object_id, data in people.items():
                                 distance = np.sqrt((cx - data['centroid'][0]) ** 2 + (cy - data['centroid'][1]) ** 2)
-                                if distance < 500:  # Adjust the threshold as needed
+                                print(distance)
+                                if distance < 300:  # Adjust the threshold as needed
                                     matched_object_id = object_id
                                     break
 
