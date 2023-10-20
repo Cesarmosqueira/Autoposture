@@ -19,7 +19,7 @@ from utils.datasets import letterbox
 from utils.general import non_max_suppression_kpt, strip_optimizer, xyxy2xywh
 from utils.plots import colors, output_to_keypoint, plot_one_box_kpt, plot_skeleton_kpts
 from utils.torch_utils import select_device
-from tts.tttest import generate_audios, play_audio
+# from tts.tttest import generate_audios, play_audio
 import asyncio
 import threading
 import websockets
@@ -96,7 +96,7 @@ def run(source, device, separation, length, multiple):
         longevity = 0 # frames spent in the current status
 
         # generate_audios("good"); generate_audios("bad")
-        bad_audio_thread = threading.Thread(target=play_audio, args=["bad"])
+        # bad_audio_thread = threading.Thread(target=play_audio, args=["bad"])
 
         empty = False
         while(cap.isOpened):
@@ -151,13 +151,13 @@ def run(source, device, separation, length, multiple):
                             # print(score, status)
                             current_sequence = []
 
-                        if current_status == previous_status:
-                            if not bad_audio_thread.is_alive() and longevity < 30:
-                                longevity += 1
-                            else:
-                                longevity = 0
-                        else:
-                            longevity = 0
+                        # if current_status == previous_status:
+                        #     if not bad_audio_thread.is_alive() and longevity < 30:
+                        #         longevity += 1
+                        #     else:
+                        #         longevity = 0
+                        # else:
+                        #     longevity = 0
 
                         # if longevity == 30 and current_status == "bad":
                         #     try:
