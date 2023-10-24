@@ -7,6 +7,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
+from internal.prediction_client import predict_http_request
 
 
 yolov7_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'vendor/yolov7')
@@ -26,39 +27,8 @@ import websockets
 import json
 
 
-HOST = 'localhost'
-PORT = '8000'
 POSEWEIGHTS = 'src_models/yolov7-w6-pose.pt'
 
-async def predict_request(payload):
-    """
-    Args:
-        - payload: {'array': (1, 10, 50) shape (10 frames)}
-    Returns:
-        - score: Value between 0 and 1
-        - status: Good or bad posture (depending on threshold:0.7)
-    """
-    uri = f"ws://{HOST}:{PORT}"
-    try:
-        async with websockets.connect(uri) as ws:
-            payload_json = json.dumps(payload)
-            await ws.send(payload_json)
-            raw_prediction = await ws.recv()
-            prediction = json.loads(raw_prediction)
-            score = prediction['score']
-            status = prediction['status']
-            return score, status
-    except:
-        return None, 'server-error'
-
-
-def predict_http_request(payload):
-    response = requests.post(f"http://{HOST}:{PORT}/predict", json=payload)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print("Error:", response.status_code)
-        print(response.text)
 
 @torch.no_grad()
 def run(source, device, separation, length, multiple):

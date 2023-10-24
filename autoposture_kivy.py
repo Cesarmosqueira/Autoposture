@@ -68,11 +68,11 @@ def predict_http_request(payload):
         print(response.text)
 
 
-current_score = 0
-current_status = 'good'
 
 @torch.no_grad()
 def run(source, device, separation, length, multiple):
+    current_score = 0
+    current_status = 'good'
     # global ap_model
     separation = int(separation)
     length = int(length)
