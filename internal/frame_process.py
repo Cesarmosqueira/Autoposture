@@ -186,7 +186,7 @@ def on_update(frame):
 
 
     frame_count += 1
-    return im0
+    return im0, current_status, current_score
     
     # cv2.imshow("YOLOv7 Pose Estimation Demo", im0)
     # key = cv2.waitKey(1) & 0xFF  # Wait for 1 millisecond and get the pressed key
