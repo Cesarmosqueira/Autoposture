@@ -6,7 +6,13 @@ from kivymd.uix.label import MDLabel
 from kivy.uix.image import Image
 from kivy.graphics.texture import Texture
 from kivy.clock import Clock
+from kivy.uix.progressbar import ProgressBar
+from kivy.uix.popup import Popup
 from internal.frame_process import model_initialization, on_update
+from kivy.core.text import Label
+from kivy.graphics import Line, Rectangle, Color
+from kivy.uix.widget import Widget
+from kivy.clock import Clock
 import cv2
 
 KV = '''
@@ -20,9 +26,9 @@ RelativeLayout:
         Image:
             id: video_image
             size_hint_x: None
-            width: 640  # Set the width to match the video frame width
+            width: 640
             size_hint_y: None
-            height: 480  # Adjust the height according to your video feed
+            height: 480
 
         RelativeLayout:
             id: labels_layout
@@ -44,7 +50,6 @@ RelativeLayout:
                 font_size: '24sp'
                 bold: True
                 pos_hint: {'x': 0.6}
-        
 
     MDRaisedButton:
         icon: 'lightbulb-multiple-outline'
@@ -54,15 +59,29 @@ RelativeLayout:
     AnchorLayout:
         anchor_x: 'center'
         anchor_y: 'top'
-        pos_hint: {'center_x': 0.5, 'center_y': 0.47}
-        MDRaisedButton:
-            id: start_autoposture
-            text: "START AUTOPOSTURE"
-            size_hint_x: None
-            width: 800 
-            size_hint_y: None
-            height: 60  
-            on_release: app.load_video_button()
+        pos_hint: {'center_x': 0.8}
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: 1, None
+            height: "60dp"
+            spacing: "10dp"
+            pos_hint: {'center_x': 0.5}
+
+            MDRaisedButton:
+                id: start_autoposture
+                text: "START AUTOPOSTURE"
+                size_hint_x: None
+                width: 200
+                pos_hint: {'center_x': 0.5}
+                on_release: app.load_video_button()
+
+            MDRaisedButton:
+                id: show_average_button
+                text: "Show Average"
+                size_hint_x: None
+                width: 200
+                on_release: app.show_average_popup()
+                disabled: start_autoposture.state == 'down'
 '''
 
 class AutopostureApp(MDApp):
@@ -70,6 +89,7 @@ class AutopostureApp(MDApp):
         self.theme_cls.theme_style_switch_animation = True
         self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Blue"
+        self.prediction_scores = []  # List to store prediction scores
         return Builder.load_string(KV)
 
     def on_start(self):
@@ -86,7 +106,7 @@ class AutopostureApp(MDApp):
             self.root.ids.start_autoposture.text = "RESTART AUTOPOSTURE"
             self.video_running = False
             Clock.unschedule(self.load_video)
-    
+
     def switch_theme_style(self):
         self.theme_cls.primary_palette = (
             "Blue" if self.theme_cls.primary_palette == "Blue" else "Blue"
@@ -118,6 +138,53 @@ class AutopostureApp(MDApp):
 
         prediction_label = self.root.ids.prediction_label
         prediction_label.text = f"Prediction Score: {int(prediction_score * 100)}%"
+        
+        self.prediction_scores.append(prediction_score)
+
+    def show_average_popup(self):
+        if self.prediction_scores:
+            average = int(sum(self.prediction_scores) / len(self.prediction_scores) * 100)
+            content = MDBoxLayout(orientation='vertical', padding=10)
+
+            progress_label = MDLabel(
+                text=f"Average Prediction Score: {average}%",
+                theme_text_color="Secondary",
+                font_style="H6",
+            )
+            content.add_widget(progress_label)
+
+            popup = Popup(
+                title="Average Score",
+                content=content,
+                size_hint=(None, None),
+                size=("350dp", "200dp"),
+            )
+
+            progress_label.theme_text_color = "Primary"
+            if self.theme_cls.theme_style == "Light":
+            # If the theme is "Light," set the background color and font color accordingly
+                popup.background_color = self.theme_cls.bg_dark
+
+            popup.open()
+
+        # Clear the prediction scores list
+            self.prediction_scores = []
+        else:
+        # Handle the case where there are no prediction scores.
+            content = MDLabel(text="No prediction scores yet")
+            popup = Popup(
+                title="Average Score",
+                content=content,
+                size_hint=(None, None),
+                size=("350dp", "200dp"),  # Adjust the size here to make it wider
+            )
+
+            if self.theme_cls.theme_style == "Light":
+            # If the theme is "Light," set the background color and font color accordingly
+                popup.background_color = self.theme_cls.bg_dark
+                content.theme_text_color = "Primary"
+
+            popup.open()
 
 if __name__ == '__main__':
     AutopostureApp().run()
