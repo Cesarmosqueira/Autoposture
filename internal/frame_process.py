@@ -62,9 +62,20 @@ multiple = False
 frame_count = 0
 empty = False
 
+
+# for audio playing
+iterations_in_bad_posture = 0 
+max_iterations_in_bad_posture = 5
+should_alert = False
+
+
 @torch.no_grad()
-def on_update(frame):
-    global separation, frame_count, current_sequence, empty, current_score, current_status
+def on_update(frame, recently_alerted):
+    global separation, frame_count, current_sequence, empty, current_score, current_status, should_alert,\
+            iterations_in_bad_posture, max_iterations_in_bad_posture
+    if recently_alerted:
+        should_alert = False
+
     orig_image = frame 
     image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
     image = letterbox(image, (frame.shape[1]), stride=64, auto=True)[0]
@@ -105,6 +116,8 @@ def on_update(frame):
                 response = predict_http_request(payload)
 
                 current_score = response['score']
+                if response['status'] == 'bad':
+                    iterations_in_bad_posture += 1
                 current_status = response['status']
                 current_sequence = []
 
@@ -179,18 +192,14 @@ def on_update(frame):
             else:
                 data['sequence'] = []
 
+        
         statuses = [(people[p]['yoloid'], people[p]['status']) for p in people]
         # for id, status in statuses:
         #     print(f'{id}: {status}', end='\t')
         # print()
-
+    if iterations_in_bad_posture >= max_iterations_in_bad_posture:
+        iterations_in_bad_posture = 0
+        should_alert = True
 
     frame_count += 1
-    return im0, current_status, current_score
-    
-    # cv2.imshow("YOLOv7 Pose Estimation Demo", im0)
-    # key = cv2.waitKey(1) & 0xFF  # Wait for 1 millisecond and get the pressed key
-    # if key == ord('q'):
-    #     cv2.destroyAllWindows()  # Close the window if 'q' is pressed
-    #     breakV
-
+    return im0, current_status, current_score, should_alert

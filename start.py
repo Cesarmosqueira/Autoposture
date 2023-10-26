@@ -1,3 +1,6 @@
+import os
+import threading
+os.environ["KIVY_NO_CONSOLELOG"] = "1"
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -9,83 +12,18 @@ from kivy.clock import Clock
 from kivy.uix.progressbar import ProgressBar
 from kivy.uix.popup import Popup
 from internal.frame_process import model_initialization, on_update
+from internal.tts.tttest import generate_audios, play_audio
 from kivy.core.text import Label
 from kivy.graphics import Line, Rectangle, Color
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
+from vendor.kvconfigs import KV
 import cv2
 
-KV = '''
-RelativeLayout:
-    BoxLayout:
-        orientation: 'vertical'
-        size_hint: None, None
-        size: self.minimum_size
-        pos_hint: {'center_x': 0.5, 'center_y': 0.45}
-
-        Image:
-            id: video_image
-            size_hint_x: None
-            width: 640
-            size_hint_y: None
-            height: 480
-
-        RelativeLayout:
-            id: labels_layout
-            size_hint_y: None
-            height: "40dp"
-            padding: 10
-
-            MDLabel:
-                id: posture_label
-                text: "Posture:"
-                font_size: '24sp'
-                bold: True
-                theme_text_color: "Secondary"
-                pos_hint: {'x': 0.02}
-
-            MDLabel:
-                id: prediction_label
-                text: "Prediction Score: 0"
-                font_size: '24sp'
-                bold: True
-                pos_hint: {'x': 0.6}
-
-    MDRaisedButton:
-        icon: 'lightbulb-multiple-outline'
-        on_release: app.switch_theme_style()
-        pos_hint: {"x": -.03}
-
-    AnchorLayout:
-        anchor_x: 'center'
-        anchor_y: 'top'
-        pos_hint: {'center_x': 0.8}
-        BoxLayout:
-            orientation: 'horizontal'
-            size_hint: 1, None
-            height: "60dp"
-            spacing: "10dp"
-            pos_hint: {'center_x': 0.5}
-
-            MDRaisedButton:
-                id: start_autoposture
-                text: "START AUTOPOSTURE"
-                size_hint_x: None
-                width: 200
-                pos_hint: {'center_x': 0.5}
-                on_release: app.load_video_button()
-
-            MDRaisedButton:
-                id: show_average_button
-                text: "Show Average"
-                size_hint_x: None
-                width: 200
-                on_release: app.show_average_popup()
-                disabled: start_autoposture.state == 'down'
-'''
 
 class AutopostureApp(MDApp):
     def build(self):
+        self.recently_alerted = False
         self.theme_cls.theme_style_switch_animation = True
         self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Blue"
@@ -115,12 +53,33 @@ class AutopostureApp(MDApp):
             "Dark" if self.theme_cls.theme_style == "Light" else "Light"
         )
 
+    def alert_user(self):
+        play_audio('bad')
+        # Add your code to play audio or perform alert actions here
+
+    def run_alert(self):
+        if not self.recently_alerted:
+            self.recently_alerted = False
+            threading.Thread(target=self.alert_user).start()
+
+    def trigger_alert(self, dt):
+        # This function is scheduled to run once, asynchronously
+        # Call the alert_user function or perform any alert actions here
+        self.alert_user()
+        self.recently_alerted = False
+
+
     def load_video(self, *args):
         if not self.video_running:
             return
 
         ret, frame = self.capture.read()
-        frame, posture, prediction_score = on_update(frame)
+        frame, posture, prediction_score, should_update = on_update(frame, self.recently_alerted)
+        if should_update:
+            self.run_alert()
+            self.recently_alerted = True
+        else:
+            self.recently_alerted = False
 
         buffer = cv2.flip(frame, 0).tobytes()
         texture = Texture.create(
@@ -140,6 +99,7 @@ class AutopostureApp(MDApp):
         prediction_label.text = f"Prediction Score: {int(prediction_score * 100)}%"
         
         self.prediction_scores.append(prediction_score)
+
 
     def show_average_popup(self):
         if self.prediction_scores:
