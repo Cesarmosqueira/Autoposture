@@ -160,7 +160,7 @@ class AutopostureApp(MDApp):
                 size=("350dp", "200dp"),
             )
 
-            progress_label.theme_text_color = "Primary"
+            # progress_label.theme_text_color = "Primary"
             if self.theme_cls.theme_style == "Light":
             # If the theme is "Light," set the background color and font color accordingly
                 popup.background_color = self.theme_cls.bg_dark
