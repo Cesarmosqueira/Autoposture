@@ -13,4 +13,5 @@ def generate_audios(status, text):
 
 def play_audio(status):
     audio_file = f"assets/audios/{status}.mp3"
+    print(audio_file)
     subprocess.run(["mpv", audio_file])

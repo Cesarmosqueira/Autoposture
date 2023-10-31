@@ -1,6 +1,6 @@
 import os
 import threading
-os.environ["KIVY_NO_CONSOLELOG"] = "1"
+#os.environ["KIVY_NO_CONSOLELOG"] = "1"
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -19,7 +19,11 @@ from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from vendor.kvconfigs import KV
 import cv2
+from notifypy import Notify
 
+# Set the application icon
+
+notification = Notify()
 
 class AutopostureApp(MDApp):
     def build(self):
@@ -27,6 +31,8 @@ class AutopostureApp(MDApp):
         self.theme_cls.theme_style_switch_animation = True
         self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Blue"
+        self.icon = 'assets/ergonomic.png'
+
         self.prediction_scores = []  # List to store prediction scores
         return Builder.load_string(KV)
 
@@ -54,8 +60,11 @@ class AutopostureApp(MDApp):
         )
 
     def alert_user(self):
+        notification.title = "Bad Posture"
+        notification.message = "You are in a bad posture. Please correct your sitting."
+        notification.icon = "assets/ergonomic.png"
+        notification.send()
         play_audio('bad')
-        # Add your code to play audio or perform alert actions here
 
     def run_alert(self):
         if not self.recently_alerted:
@@ -63,8 +72,6 @@ class AutopostureApp(MDApp):
             threading.Thread(target=self.alert_user).start()
 
     def trigger_alert(self, dt):
-        # This function is scheduled to run once, asynchronously
-        # Call the alert_user function or perform any alert actions here
         self.alert_user()
         self.recently_alerted = False
 
