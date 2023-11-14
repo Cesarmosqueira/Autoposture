@@ -70,7 +70,7 @@ should_alert = False
 
 
 @torch.no_grad()
-def on_update(frame, recently_alerted):
+def on_update(frame, recently_alerted, threshold = 0.7):
     global separation, frame_count, current_sequence, empty, current_score, current_status, should_alert,\
             iterations_in_bad_posture, max_iterations_in_bad_posture
     if recently_alerted:
@@ -116,6 +116,7 @@ def on_update(frame, recently_alerted):
                 response = predict_http_request(payload)
 
                 current_score = response['score']
+                response['status'] = 'good' if current_score > threshold else 'bad'
                 if response['status'] == 'bad':
                     iterations_in_bad_posture += 1
                 current_status = response['status']
@@ -185,7 +186,7 @@ def on_update(frame, recently_alerted):
                     response = predict_http_request(payload)
 
                     data['score'] = response['score']
-                    data['status'] = response['status']
+                    data['status'] = 'good' if score > THRESHOLD else 'bad'
                     data['sequence'] = []
 
                 # print(f"{data['yoloid']} -> {data['status']}", end=' ')

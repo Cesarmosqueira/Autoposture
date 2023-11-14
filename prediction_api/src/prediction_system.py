@@ -46,10 +46,7 @@ def get_prediction(payload : dict):
 
     prediction = model.predict(sequence, verbose=0).tolist()
     score = prediction[0][0]
-    response = { 
-                'score': score,
-                'status': 'good' if score > THRESHOLD else 'bad'
-    }
+    response = { 'score': score }
     return response
 
 def initialize_model():

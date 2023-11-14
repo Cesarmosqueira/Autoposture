@@ -27,7 +27,9 @@ notification = Notify()
 
 class AutopostureApp(MDApp):
     def build(self):
+        generate_audios('bad', 'Sit correctly!')
         self.recently_alerted = False
+        self.threshold = 0.7
         self.theme_cls.theme_style_switch_animation = True
         self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Blue"
@@ -75,13 +77,31 @@ class AutopostureApp(MDApp):
         self.alert_user()
         self.recently_alerted = False
 
+    def toggle_input_field(self):
+        threshold_input = self.root.ids.threshold_input
+        if threshold_input.disabled:  # If disabled, enable and show the input field
+            threshold_input.disabled = False
+            threshold_input.opacity = 1
+        else:  # If enabled, disable and hide the input field
+            threshold_input.disabled = True
+            threshold_input.opacity = 0
+
+    def change_threshold(self, text):
+        try:
+            self.threshold = float(text)
+            # Perform action with the new threshold value (e.g., update your threshold variable)
+            # ...
+        except ValueError:
+            # Handle invalid input (non-float value)
+            pass
+
 
     def load_video(self, *args):
         if not self.video_running:
             return
 
         ret, frame = self.capture.read()
-        frame, posture, prediction_score, should_update = on_update(frame, self.recently_alerted)
+        frame, posture, prediction_score, should_update = on_update(frame, self.recently_alerted, self.threshold)
         if should_update:
             self.run_alert()
             self.recently_alerted = True
