@@ -1,7 +1,7 @@
 import requests
 
 HOST = 'localhost'
-PORT = '8000'
+PORT = '8103'
 def predict_http_request(payload):
     """
     Args:
