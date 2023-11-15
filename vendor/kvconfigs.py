@@ -43,7 +43,7 @@ RelativeLayout:
     AnchorLayout:
         anchor_x: 'center'
         anchor_y: 'top'
-        pos_hint: {'center_x': 0.7}
+        pos_hint: {'center_x': 0.8}
         BoxLayout:
             orientation: 'horizontal'
             size_hint: 1, None
@@ -66,19 +66,4 @@ RelativeLayout:
                 width: 200
                 on_release: app.show_average_popup()
                 disabled: start_autoposture.state == 'down'
-
-            MDRaisedButton:
-                id: another_button
-                text: "Change Threshold"
-                size_hint_x: None
-                width: 200
-                on_release: app.toggle_input_field()
-
-            MDTextField:
-                id: threshold_input
-                hint_text: 'Threshold (0.7)'
-                input_filter: 'float'
-                size_hint_x: None
-                width: 200
-                on_text_validate: app.change_threshold(threshold_input.text)
 '''
