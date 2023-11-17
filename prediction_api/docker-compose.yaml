@@ -2,14 +2,10 @@ version: "3.4"
 
 services:
   ap_predictions_service:
-    image: ap_predictions:latest
+    image: cesarmosqueira/autoposture_api
     environment:
-      - THRESHOLD=0.5
-      - MODELS_FOLDER=/app/src_models
-      - AUTOPOSTURE_MODEL_URL=
-      - AVAILABLE_MODELS_PATH=/app/model_paths.json
+      - PORT=8420
     restart: on-failure
     ports:
-      - "8000:8000"
+      - "${PORT}:${PORT}"
     network_mode: bridge
-

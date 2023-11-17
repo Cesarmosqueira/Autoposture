@@ -19,7 +19,7 @@ from utils.torch_utils import select_device
 
 
 HOST = 'localhost'
-PORT = '8000'
+PORT = '8420'
 def predict_http_request(payload):
     """
     Args:
