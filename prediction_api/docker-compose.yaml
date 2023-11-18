@@ -7,5 +7,5 @@ services:
       - PORT=8420
     restart: on-failure
     ports:
-      - "${PORT}:${PORT}"
+      - "8420:8420"
     network_mode: bridge
