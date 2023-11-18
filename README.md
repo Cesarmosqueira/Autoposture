@@ -14,6 +14,7 @@ wget -P src_models/ https://github.com/WongKinYiu/yolov7/releases/download/v0.1/
 wget -P src_models/ https://github.com/Cesarmosqueira/Autoposture/releases/download/v1.0.0/autoposture-model.h5
 ```
 
+
 ## Before running the live demo
 Check the [prediction system api](https://github.com/Cesarmosqueira/Autoposture/tree/master/prediction_api#readme)
 
@@ -21,11 +22,13 @@ Check the [prediction system api](https://github.com/Cesarmosqueira/Autoposture/
 ## Run:
 This is a default example.
 ```
-python autoposture.py --source 0 --view-img --device 0
+docker pull cesarmosqueira/autoposture_api
+docker-compose -f prediction_api/docker-compose.yaml up
+pip install -r requirements.txt
+python start.py
 ```
  - view-img: enables the live display
- - source: defines the source weather be a video or a webcam  (videos are not supported)
- - device: 0 for gpu. Also can be 'cuda' 'gpu' and all the other tensorflow supported devices
 
-#### tip
+#### Remember
 - To list the available webcam sources you can use `v4l2-ctl --list-devices`
+- Is neccesary to run the docker image (the api)
