@@ -15,20 +15,27 @@ wget -P src_models/ https://github.com/Cesarmosqueira/Autoposture/releases/downl
 ```
 
 
-## Before running the live demo
-Check the [prediction system api](https://github.com/Cesarmosqueira/Autoposture/tree/master/prediction_api#readme)
+## Pre-Execution Checklist:
+- For Windows users: Ensure you run the setup and execution commands as an administrator.
+- Navigate to the cloned Autoposture repository directory before proceeding.
+- have two terminal windows open, both in the repo. One for the client and one for the service
 
 
-## Run:
+## Run the api in one terminal:
 This is a default example.
 ```
 docker pull cesarmosqueira/autoposture_api
 docker-compose -f prediction_api/docker-compose.yaml up
+
+```
+## Run client in another terminal:
+```
 pip install -r requirements.txt
 python start.py
 ```
  - view-img: enables the live display
 
 #### Remember
-- To list the available webcam sources you can use `v4l2-ctl --list-devices`
-- Is neccesary to run the docker image (the api)
+- Windows Users: Run commands as administrator.
+- Webcam Devices: List available devices with v4l2-ctl --list-devices.
+- Ensure Docker API service is active before starting the client.
