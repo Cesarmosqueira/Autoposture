@@ -18,16 +18,16 @@ wget -P src_models/ https://github.com/Cesarmosqueira/Autoposture/releases/downl
 ## Pre-Execution Checklist:
 - For Windows users: Ensure you run the setup and execution commands as an administrator.
 - Navigate to the cloned Autoposture repository directory before proceeding.
-- have two terminal windows open, both in the repo. One for the client and one for the service
+- Have two terminal windows open, both in the repo. One for the client and one for the service
 
 
 ## Run the api in one terminal:
-This is a default example.
 ```
 docker pull cesarmosqueira/autoposture_api
 docker-compose -f prediction_api/docker-compose.yaml up
-
 ```
+For linux users: If you can't execute the second command and you get something with:  `Permission Denied`, run it as administrator
+
 ## Run client in another terminal:
 ```
 pip install -r requirements.txt
